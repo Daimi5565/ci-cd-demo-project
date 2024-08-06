@@ -17,11 +17,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
-        run: |
-          docker build -t opsoura-site .
+        run: docker build -t opsoura-site .
 
   deploy:
     runs-on: ubuntu-latest
@@ -35,7 +34,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        run: echo "Daimi@5565" | docker login -u saad5565 --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Deploy Docker container
         run: |
@@ -57,4 +56,4 @@ jobs:
       - name: Test server
         run: |
           sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:881) == "200" ]]'
+          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081) == "200" ]]'
