@@ -40,7 +40,7 @@ jobs:
         run: |
           docker stop opsoura-site || true
           docker rm opsoura-site || true
-          docker run -d --name opsoura-site -p 8081:80 opsoura-site
+          docker run -d --name opsoura-site -p 881:80 opsoura-site
 
   test:
     runs-on: ubuntu-latest
@@ -56,4 +56,4 @@ jobs:
       - name: Test server
         run: |
           sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081) == "200" ]]'
+          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:881) == "200" ]]'
