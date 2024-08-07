@@ -45,4 +45,4 @@ jobs:
       - name: Test server
         run: |
           sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080) == "200" ]]'
+          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://103.172.26.41:8080) == "200" ]]'
