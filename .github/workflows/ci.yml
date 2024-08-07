@@ -1,29 +1,20 @@
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
+name: CI
+on: [push]
+env:
+  DOCKER_IMAGE: saad5565/my-nginx-html-server  # Update with your Docker Hub username
+  DOCKER_TAG: latest  # Tag for the Docker image
 jobs:
   build:
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build and Push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
-
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+    - name: Build Docker image
+      run: docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
+    - name: Push Docker image
+      run: docker push ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
   deploy:
     runs-on: self-hosted
     needs: build
@@ -36,19 +27,20 @@ jobs:
         run: |
           docker stop my-nginx-html-server || true
           docker rm my-nginx-html-server || true
-          docker run -d --name my-nginx-html-server -p 8080:8080 ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          docker run -d --name my-nginx-html-server -p 8080:80 ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           docker ps
           docker logs my-nginx-html-server
   test:
     runs-on: self-hosted
     needs: deploy
-
+    container:
+      image: curlimages/curl:latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install curl
-        run: sudo apt-get update && sudo apt-get install -y curl
+      - name: Test if the server is up
+        run: |
+          sleep 180  # Increase sleep time to 120 seconds
+          curl -v http://103.172.26.41:8080 || true
+          test $(curl -s -o /dev/null -w "%{http_code}" http://103.172.26.41:8080) -eq 200
 
       - name: Test server
         run: |
