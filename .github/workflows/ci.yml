@@ -41,8 +41,3 @@ jobs:
           sleep 180  # Increase sleep time to 120 seconds
           curl -v http://103.172.26.41:8080 || true
           test $(curl -s -o /dev/null -w "%{http_code}" http://103.172.26.41:8080) -eq 200
-
-      - name: Test server
-        run: |
-          sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://103.172.26.41:8080) == "200" ]]'
