@@ -19,9 +19,11 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Docker image
-        run: docker build -t opsoura-site .
-      
+      - name: Build and Push Docker image
+        run: |
+          docker build -t opsoura-site:latest .
+          docker tag opsoura-site:latest ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -31,17 +33,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Deploy Docker container
+      - name: Pull and Run Docker container
         run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
           docker stop opsoura-site || true
           docker rm opsoura-site || true
-          docker run -d --name opsoura-site -p 881:80 opsoura-site
+          docker run -d --name opsoura-site -p 8081:80 ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
 
   test:
     runs-on: ubuntu-latest
@@ -57,4 +57,4 @@ jobs:
       - name: Test server
         run: |
           sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:881) == "200" ]]'
+          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081) == "200" ]]'
