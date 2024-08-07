@@ -5,7 +5,7 @@ FROM nginx:alpine
 COPY index.html /usr/share/nginx/html/index.html
 
 # Expose port 80 to the outside world
-EXPOSE 80
+EXPOSE 81
 
 # Default command to run when starting the container
 CMD ["nginx", "-g", "daemon off;"]
