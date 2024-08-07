@@ -1,60 +1,42 @@
 name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build and Push Docker image
+      - name: Build Docker image
         run: |
-          docker build -t opsoura-site:latest .
-          docker tag opsoura-site:latest ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
+          echo "Building Docker image..."
+          docker build -t opsoura-site .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Pull and Run Docker container
+      - name: Deploy Docker container
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
+          echo "Deploying Docker container..."
           docker stop opsoura-site || true
           docker rm opsoura-site || true
-          docker run -d --name opsoura-site -p 881:81 ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
+          docker run -d --name opsoura-site -p 881:81 opsoura-site
 
   test:
     runs-on: ubuntu-latest
     needs: deploy
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install curl
-        run: sudo apt-get update && sudo apt-get install -y curl
-
-      - name: Test server
+      - name: Test if the server is up
         run: |
-          sleep 10
-          '[[ $(curl -s -o /dev/null -w "%{http_code}" http://localhost:881) == "200" ]]'
+          echo "Testing if the server is up..."
+          sleep 180
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://103.172.26.41:881)
+          if [ "$STATUS_CODE" -eq 200 ]; then
+          echo "Server is up and running."
+          else
+          echo "Server is not up, status code: $STATUS_CODE"
+          exit 1
+          fi
