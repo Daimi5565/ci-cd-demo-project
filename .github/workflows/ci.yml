@@ -41,7 +41,7 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
           docker stop opsoura-site || true
           docker rm opsoura-site || true
-          docker run -d --name opsoura-site -p 881:80 ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
+          docker run -d --name opsoura-site -p 881:81 ${{ secrets.DOCKER_USERNAME }}/opsoura-site:latest
 
   test:
     runs-on: ubuntu-latest
